@@ -1,0 +1,117 @@
+{
+  "name": "defold-build",
+  "displayName": "Defold Build",
+  "description": "Build, Run & Package Defold projects from Visual Studio Code",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.60.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onCommand:defold-code.helloWorld"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "configuration": {
+      "title": "Defold",
+      "properties": {
+        "defold.editorPath": {
+          "type": ["string", "null"],
+          "default": null,
+          "description": "Path to the Defold Editor, will attempt to infer path if this is null."
+        },
+        "defold.build.email": {
+          "type": ["string", "null"],
+          "default": null,
+          "description": "Email address for Bob to use when logging in."
+        },
+        "defold.build.auth": {
+          "type": ["string", "null"],
+          "default": null,
+          "description": "Auth token for Bob to use when logging in."
+        },
+        "defold.build.textureCompression": {
+          "type": "boolean",
+          "default": true,
+          "description": "Use texture compression as specified in texture profiles."
+        },
+        "defold.build.withSymbols": {
+          "type": "boolean",
+          "default": true,
+          "description": "Use symbols when building the project."
+        },
+        "defold.build.liveUpdate": {
+          "type": "boolean",
+          "default": false,
+          "description": "Should LiveUpdate content be published."
+        },
+        "defold.build.ios.identity": {
+          "type": ["string", "null"],
+          "default": "null",
+          "description": "The name of the iOS signing identity to use when building the project."
+        },
+        "defold.build.ios.mobileProvisioningProfilePath": {
+          "type": ["string", "null"],
+          "default": "null",
+          "description": "The path to the mobile provisioning profile to use when building the project."
+        },
+        "defold.build.android.keystore": {
+          "type": ["string", "null"],
+          "default": "null",
+          "description": "The path to the Android keystore to use when building the project."
+        },
+        "defold.build.android.keystorePass": {
+          "type": ["string", "null"],
+          "default": "null",
+          "description": "The password for the Android keystore to use when building the project."
+        },
+        "defold.build.android.keystoreAlias": {
+          "type": ["string", "null"],
+          "default": "null",
+          "description": "The alias for the Android keystore to use when building the project."
+        },
+        "defold.build.android.bundleFormat": {
+          "type": "string",
+          "default": "apk",
+          "enum": ["apk", "aab"],
+          "enumDescriptions": ["Android Package Format (APK)", "Android App Bundle Format (AAB)"],
+          "description": "The Android bundle format to use when building the project."
+        }
+      }
+    },
+    "commands": [
+      {
+        "command": "defold-code.helloWorld",
+        "title": "Hello World"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run package",
+    "compile": "webpack",
+    "watch": "webpack --watch",
+    "package": "webpack --mode production --devtool hidden-source-map",
+    "test-compile": "tsc -p . --outDir out",
+    "pretest": "npm run test-compile && npm run compile && npm run lint",
+    "lint": "eslint src --ext ts",
+    "test": "node ./out/test/runTest.js"
+  },
+  "devDependencies": {
+    "@types/glob": "^7.1.4",
+    "@types/mocha": "^9.0.0",
+    "@types/node": "14.x",
+    "@types/vscode": "^1.60.0",
+    "@typescript-eslint/eslint-plugin": "^4.31.1",
+    "@typescript-eslint/parser": "^4.31.1",
+    "@vscode/test-electron": "^1.6.2",
+    "eslint": "^7.32.0",
+    "glob": "^7.1.7",
+    "mocha": "^9.1.1",
+    "ts-loader": "^9.2.5",
+    "typescript": "^4.4.3",
+    "webpack": "^5.52.1",
+    "webpack-cli": "^4.8.0"
+  }
+}
