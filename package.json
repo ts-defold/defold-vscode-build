@@ -3,6 +3,16 @@
   "displayName": "Defold Build",
   "description": "Build, Run & Package Defold projects from Visual Studio Code",
   "version": "0.0.1",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ts-defold/defold-build-code.git"
+  },
+  "homepage": "https://github.com/ts-defold/defold-build-code/blob/main/README.md",
+  "icon": "images/icon.png",
+  "galleryBanner": {
+      "color": "#1e2226",
+      "theme": "dark"
+  },
   "engines": {
     "vscode": "^1.60.0"
   },
