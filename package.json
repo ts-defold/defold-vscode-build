@@ -3,6 +3,7 @@
   "displayName": "Defold Build",
   "description": "Build, Run & Package Defold projects from Visual Studio Code",
   "version": "0.0.1",
+  "license": "MIT",
   "repository": {
     "type": "git",
     "url": "https://github.com/ts-defold/defold-build-code.git"
