@@ -1,21 +1,20 @@
 import * as vscode from 'vscode';
-import { DefoldBuildTaskProvider } from './defoldBuildTaskProvider';
+import { TaskProvider } from './tasks/provider';
 
-let defoldBuildTaskProvider: vscode.Disposable | undefined;
+let taskProvider: vscode.Disposable | undefined;
 
 export function activate(_context: vscode.ExtensionContext): void {
+  // TODO: TaskProvider should activate if we find a game.project file that looks
+  // TODO: that looks like a defold game project.
   const workspaceRoot =
     vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length > 0
       ? vscode.workspace.workspaceFolders[0].uri.fsPath
       : undefined;
   if (!workspaceRoot) return;
 
-  defoldBuildTaskProvider = vscode.tasks.registerTaskProvider(
-    DefoldBuildTaskProvider.CustomBuildScriptType,
-    new DefoldBuildTaskProvider(workspaceRoot)
-  );
+  taskProvider = vscode.tasks.registerTaskProvider(TaskProvider.Type, new TaskProvider(workspaceRoot));
 }
 
 export function deactivate(): void {
-  if (defoldBuildTaskProvider) defoldBuildTaskProvider.dispose();
+  if (taskProvider) taskProvider.dispose();
 }

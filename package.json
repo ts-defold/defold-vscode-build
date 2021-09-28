@@ -21,7 +21,8 @@
     "Other"
   ],
   "activationEvents": [
-    "onCommand:workbench.action.tasks.runTask"
+    "onCommand:workbench.action.tasks.runTask",
+    "workspaceContains:**/game.project"
   ],
   "main": "./dist/extension.js",
   "contributes": {
@@ -29,18 +30,19 @@
       "title": "Defold",
       "properties": {
         "defold.editorPath": {
-          "type": ["string", "null"],
-          "default": null,
-          "description": "Path to the Defold Editor, will attempt to infer path if this is null."
+          "type": "string",
+          "default": "",
+          "scope": "machine-overridable",
+          "description": "Path to the Defold Editor, will attempt to infer path if this is not set."
         },
         "defold.build.email": {
-          "type": ["string", "null"],
-          "default": null,
+          "type": "string",
+          "default": "",
           "description": "Email address for Bob to use when logging in."
         },
         "defold.build.auth": {
-          "type": ["string", "null"],
-          "default": null,
+          "type": "string",
+          "default": "",
           "description": "Auth token for Bob to use when logging in."
         },
         "defold.build.textureCompression": {
@@ -59,28 +61,28 @@
           "description": "Should LiveUpdate content be published."
         },
         "defold.build.ios.identity": {
-          "type": ["string", "null"],
-          "default": "null",
+          "type": "string",
+          "default": "",
           "description": "The name of the iOS signing identity to use when building the project."
         },
         "defold.build.ios.mobileProvisioningProfilePath": {
-          "type": ["string", "null"],
-          "default": "null",
+          "type": "string",
+          "default": "",
           "description": "The path to the mobile provisioning profile to use when building the project."
         },
         "defold.build.android.keystore": {
-          "type": ["string", "null"],
-          "default": "null",
+          "type": "string",
+          "default": "",
           "description": "The path to the Android keystore to use when building the project."
         },
         "defold.build.android.keystorePass": {
-          "type": ["string", "null"],
-          "default": "null",
+          "type": "string",
+          "default": "",
           "description": "The password for the Android keystore to use when building the project."
         },
         "defold.build.android.keystoreAlias": {
-          "type": ["string", "null"],
-          "default": "null",
+          "type": "string",
+          "default": "",
           "description": "The alias for the Android keystore to use when building the project."
         },
         "defold.build.android.bundleFormat": {
@@ -92,10 +94,57 @@
         }
       }
     },
-    "commands": [
+    "taskDefinitions": [
       {
-        "command": "defold-code.helloWorld",
-        "title": "Hello World"
+        "type": "defold",
+        "required": [
+          "action"
+        ],
+        "properties": {
+          "action": {
+            "type": "string",
+            "description": "The defold build task to execute",
+            "enum": [
+              "build",
+              "bundle",
+              "clean",
+              "resolve"
+            ],
+            "enumDescriptions": [
+              "Build the project for running, debugging or testing",
+              "Bundle the project for a specific platform",
+              "Clean the project output",
+              "Resolve the project dependencies"
+            ]
+          },
+          "configuration": {
+            "type": "string",
+            "description": "The configuration to use when building the project",
+            "default": "debug",
+            "enum": [
+              "debug",
+              "release"
+            ],
+            "enumDescriptions": [
+              "Build the project in debug mode",
+              "Build the project in release mode"
+            ]
+          },
+          "platform": {
+            "type": "string",
+            "description": "The target platform to build for",
+            "default": "current",
+            "enum": [
+              "current",
+              "android",
+              "ios",
+              "macOS",
+              "windows",
+              "linux",
+              "html5"
+            ]
+          }
+        }
       }
     ]
   },
