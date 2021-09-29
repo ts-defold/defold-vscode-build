@@ -1,18 +1,25 @@
 import * as vscode from 'vscode';
+import output from './output';
 import { TaskProvider } from './tasks/provider';
 
 let taskProvider: vscode.Disposable | undefined;
 
 export function activate(_context: vscode.ExtensionContext): void {
-  // TODO: TaskProvider should activate if we find a game.project file that looks
-  // TODO: that looks like a defold game project.
   const workspaceRoot =
     vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length > 0
       ? vscode.workspace.workspaceFolders[0].uri.fsPath
       : undefined;
   if (!workspaceRoot) return;
 
-  taskProvider = vscode.tasks.registerTaskProvider(TaskProvider.Type, new TaskProvider(workspaceRoot));
+  vscode.workspace.findFiles('**/game.project', '**/node_modules/**', 1).then(
+    (files) => {
+      if (files.length > 0)
+        taskProvider = vscode.tasks.registerTaskProvider('defold', new TaskProvider(workspaceRoot, files[0].fsPath));
+    },
+    (_err) => {
+      output().appendLine('Could not find game.project');
+    }
+  );
 }
 
 export function deactivate(): void {
