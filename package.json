@@ -108,13 +108,15 @@
               "build",
               "bundle",
               "clean",
-              "resolve"
+              "resolve",
+              "run"
             ],
             "enumDescriptions": [
               "Build the project for running, debugging or testing",
               "Bundle the project for a specific platform",
               "Clean the project output",
-              "Resolve the project dependencies"
+              "Resolve the project dependencies",
+              "Run the project"
             ]
           },
           "configuration": {
