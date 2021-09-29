@@ -1,24 +1,11 @@
 import * as path from 'path';
 import * as fs from 'fs';
-import * as cp from 'child_process';
 import * as os from 'os';
 import * as vscode from 'vscode';
 
-let _channel: vscode.OutputChannel;
-function getOutputChannel(): vscode.OutputChannel {
-  if (!_channel) _channel = vscode.window.createOutputChannel('Defold Build');
-
-  return _channel;
-}
-
-type DefoldTaskEnv = {
-  editorPath: string;
-  version: string;
-  editorSha1: string;
-  jdk: string;
-  java: string;
-  jar: string;
-} | null;
+import output from '../output';
+import { CustomBuildTaskTerminal } from './terminal';
+import type { DefoldBuildTaskDefinition, DefoldTaskEnv } from '../types';
 
 function parseDefoldConfig(editorPath: string): DefoldTaskEnv {
   const editorConfigPath = path.join(editorPath, 'config');
@@ -53,12 +40,6 @@ function parseDefoldConfig(editorPath: string): DefoldTaskEnv {
   /* eslint-enable @typescript-eslint/no-non-null-assertion */
 }
 
-interface DefoldBuildTaskDefinition extends vscode.TaskDefinition {
-  action: 'build' | 'bundle' | 'clean' | 'resolve';
-  configuration: 'debug' | 'release';
-  platform: 'current' | 'android' | 'ios' | 'macOS' | 'windows' | 'linux' | 'html5';
-}
-
 export class TaskProvider implements vscode.TaskProvider {
   // eslint-disable-next-line @typescript-eslint/naming-convention
   static Type = 'defold';
@@ -71,7 +52,7 @@ export class TaskProvider implements vscode.TaskProvider {
   // Since our build has this shared state, the CustomExecution is used below.
   private sharedState: string | undefined;
 
-  constructor(private workspaceRoot: string) {
+  constructor(private workspaceRoot: string, private project: string) {
     //* NOTES:
     //* Ensure we have an editor path set in the configuration, or attempt organic detection
     //* Parse the config file (Contents/Resources/config) for JDK path, defold jar, and vmargs
@@ -81,8 +62,8 @@ export class TaskProvider implements vscode.TaskProvider {
     //* Run build through PsudeoTerminal and apply sourcemaps to errors / warnings
 
     const config = vscode.workspace.getConfiguration('defold');
-    getOutputChannel().appendLine(`Workspace root: ${this.workspaceRoot}`);
-    getOutputChannel().appendLine(`Config: ${JSON.stringify(config)}`);
+    output().appendLine(`Workspace root: ${this.workspaceRoot}`);
+    output().appendLine(`Config: ${JSON.stringify(config)}`);
   }
 
   /**
@@ -91,7 +72,7 @@ export class TaskProvider implements vscode.TaskProvider {
   public async provideTasks(): Promise<vscode.Task[]> {
     if (this.tasks !== undefined) return this.tasks;
 
-    this.tasks = ['build', 'bundle', 'clean', 'resolve'].map((flavor) => {
+    this.tasks = ['build', 'bundle', 'clean', 'resolve', 'run'].map((flavor) => {
       return this.createTask(
         {
           action: flavor as DefoldBuildTaskDefinition['action'],
@@ -134,79 +115,26 @@ export class TaskProvider implements vscode.TaskProvider {
 
     // If we get here, we couldn't resolve the editor path
     void vscode.window.showErrorMessage('Please set the Defold Editor Path in your user or workspace settings.');
-
     return undefined;
   }
 
-  private createTask(definition: DefoldBuildTaskDefinition, _env: DefoldTaskEnv): vscode.Task {
+  private createTask(definition: DefoldBuildTaskDefinition, env: DefoldTaskEnv): vscode.Task {
     return new vscode.Task(
       definition,
       vscode.TaskScope.Workspace,
       definition.action,
       TaskProvider.Type,
       new vscode.CustomExecution(async (): Promise<vscode.Pseudoterminal> => {
-        // When the task is executed, this callback will run. Here, we setup for running the task.
         return new CustomBuildTaskTerminal(
           this.workspaceRoot,
-          definition.action,
+          this.project,
+          definition,
+          env,
           [],
           () => this.sharedState,
           (state: string) => (this.sharedState = state)
         );
       })
     );
-  }
-}
-
-class CustomBuildTaskTerminal implements vscode.Pseudoterminal {
-  private writeEmitter = new vscode.EventEmitter<string>();
-  onDidWrite: vscode.Event<string> = this.writeEmitter.event;
-  private closeEmitter = new vscode.EventEmitter<number>();
-  onDidClose?: vscode.Event<number> = this.closeEmitter.event;
-
-  constructor(
-    private workspaceRoot: string,
-    private flavor: string,
-    private flags: string[],
-    private getSharedState: () => string | undefined,
-    private setSharedState: (state: string) => void
-  ) {}
-
-  open(_initialDimensions: vscode.TerminalDimensions | undefined): void {
-    void this.doBuild();
-  }
-
-  close(): void {
-    // empty
-  }
-
-  private async doBuild(): Promise<void> {
-    return new Promise<void>((resolve) => {
-      this.writeEmitter.fire('Starting build...\r\n');
-      let isIncremental = this.flags.indexOf('incremental') > -1;
-      if (isIncremental) {
-        if (this.getSharedState()) {
-          // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-          this.writeEmitter.fire(`Using last build results: ${this.getSharedState()}\r\n`);
-        } else {
-          isIncremental = false;
-          this.writeEmitter.fire('No result from last build. Doing full build.\r\n');
-        }
-      }
-
-      // Since we don't actually build anything in this example set a timeout instead.
-      setTimeout(
-        () => {
-          const date = new Date();
-          this.setSharedState(date.toTimeString() + ' ' + date.toDateString());
-          this.writeEmitter.fire('Build complete.\r\n\r\n');
-          if (this.flags.indexOf('watch') === -1) {
-            this.closeEmitter.fire(0);
-            resolve();
-          }
-        },
-        isIncremental ? 1000 : 4000
-      );
-    });
   }
 }
