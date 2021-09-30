@@ -5,6 +5,7 @@ import { platform } from 'os';
 import * as vscode from 'vscode';
 
 import type { DefoldBuildTaskDefinition, DefoldTaskEnv } from '../types';
+import output from '../output';
 
 const HOST: Record<NodeJS.Platform, DefoldBuildTaskDefinition['platform']> = {
   darwin: 'macOS',
@@ -186,6 +187,7 @@ export class DefoldTerminal implements vscode.Pseudoterminal {
   }
 
   private exec(command: string, args: string[]): void {
+    output().appendLine(`Execute: ${command} ${args.join(' ')}`);
     this.process = spawn(command, args, { cwd: this.workspaceRoot });
     this.process.stdout.on('data', (data: Buffer) => {
       this.writeEmitter.fire(data.toString().replace(/\r?\n/, '\r\n'));
