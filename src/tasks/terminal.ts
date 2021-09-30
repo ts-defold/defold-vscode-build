@@ -188,11 +188,11 @@ export class DefoldTerminal implements vscode.Pseudoterminal {
   private exec(command: string, args: string[]): void {
     this.process = spawn(command, args, { cwd: this.workspaceRoot });
     this.process.stdout.on('data', (data: Buffer) => {
-      this.writeEmitter.fire(data.toString());
+      this.writeEmitter.fire(data.toString().replace(/\r?\n/, '\r\n'));
     });
 
     this.process.stderr.on('data', (data: Buffer) => {
-      this.writeEmitter.fire(data.toString());
+      this.writeEmitter.fire(data.toString().replace(/\r?\n/, '\r\n'));
     });
 
     this.process.on('close', (code) => {
