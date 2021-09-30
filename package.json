@@ -37,12 +37,12 @@
         },
         "defold.build.email": {
           "type": "string",
-          "default": "",
+          "default": "someone@acme.com",
           "description": "Email address for Bob to use when logging in."
         },
         "defold.build.auth": {
           "type": "string",
-          "default": "",
+          "default": "authtoken!",
           "description": "Auth token for Bob to use when logging in."
         },
         "defold.build.textureCompression": {
