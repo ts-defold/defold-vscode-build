@@ -1,5 +1,5 @@
-import * as path from 'path';
-import * as fs from 'fs';
+import { join } from 'path';
+import { existsSync, readFileSync } from 'fs';
 import { platform } from 'os';
 import * as vscode from 'vscode';
 
@@ -18,16 +18,16 @@ function getDefoldTaskEnv(): DefoldTaskEnv {
     case 'darwin':
       {
         if (editorPath && !editorPath.endsWith('/Contents/Resources'))
-          editorPath = path.join(editorPath, 'Contents/Resources');
+          editorPath = join(editorPath, 'Contents/Resources');
       }
       break;
   }
 
   // Parse the Defold Editor config file for the java, jdk, and defold jar
-  const editorConfigPath = path.join(editorPath, 'config');
-  if (!fs.existsSync(editorConfigPath)) return null;
+  const editorConfigPath = join(editorPath, 'config');
+  if (!existsSync(editorConfigPath)) return null;
 
-  const editorConfig = fs.readFileSync(editorConfigPath, 'utf8');
+  const editorConfig = readFileSync(editorConfigPath, 'utf8');
   const lines = editorConfig.split('\n');
   const config: Record<string, string> = {};
   for (const line of lines) {
@@ -40,12 +40,12 @@ function getDefoldTaskEnv(): DefoldTaskEnv {
     editorPath,
     version: config['version']!,
     editorSha1: config['editor_sha1']!,
-    jdk: path.join(editorPath, config['jdk']!.replace('${bootstrap.resourcespath}', config['resourcespath'])),
+    jdk: join(editorPath, config['jdk']!.replace('${bootstrap.resourcespath}', config['resourcespath'])),
     java: config['java']!.replace(
       '${launcher.jdk}',
-      path.join(editorPath, config['jdk']!.replace('${bootstrap.resourcespath}', config['resourcespath']))
+      join(editorPath, config['jdk']!.replace('${bootstrap.resourcespath}', config['resourcespath']))
     ),
-    jar: path.join(
+    jar: join(
       editorPath,
       config['jar']!.replace('${bootstrap.resourcespath}', config['resourcespath']).replace(
         '${build.editor_sha1}',
