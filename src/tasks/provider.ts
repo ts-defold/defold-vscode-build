@@ -90,15 +90,19 @@ export class TaskProvider implements vscode.TaskProvider {
 
     const env = getDefoldTaskEnv();
     this.tasks = ['build', 'bundle', 'clean', 'resolve', 'run'].map((flavor) => {
-      return this.createTask(
-        {
-          action: flavor as DefoldBuildTaskDefinition['action'],
-          type: TaskProvider.Type,
-          configuration: 'debug',
-          platform: 'current',
-          flags: [],
-        },
-        env
+      const definition: DefoldBuildTaskDefinition = {
+        action: flavor as DefoldBuildTaskDefinition['action'],
+        type: TaskProvider.Type,
+        configuration: 'debug',
+        platform: 'current',
+        flags: [],
+      };
+      return new vscode.Task(
+        definition,
+        vscode.TaskScope.Workspace,
+        flavor,
+        TaskProvider.Type,
+        this.createExecution(definition, env)
       );
     });
 
@@ -111,20 +115,15 @@ export class TaskProvider implements vscode.TaskProvider {
    */
   public resolveTask(task: vscode.Task): vscode.Task | undefined {
     const env = getDefoldTaskEnv();
-    if (env) return this.createTask(task.definition as DefoldBuildTaskDefinition, env);
+    if (!env) return undefined;
 
-    return undefined;
+    task.execution = this.createExecution(task.definition as DefoldBuildTaskDefinition, env);
+    return task;
   }
 
-  private createTask(definition: DefoldBuildTaskDefinition, env: DefoldTaskEnv): vscode.Task {
-    return new vscode.Task(
-      definition,
-      vscode.TaskScope.Workspace,
-      definition.action,
-      TaskProvider.Type,
-      new vscode.CustomExecution(async (): Promise<vscode.Pseudoterminal> => {
-        return new DefoldTerminal(this.workspaceRoot, this.project, definition, env, []);
-      })
-    );
+  private createExecution(definition: DefoldBuildTaskDefinition, env: DefoldTaskEnv): vscode.CustomExecution {
+    return new vscode.CustomExecution(async (resolvedDefinition): Promise<vscode.Pseudoterminal> => {
+      return new DefoldTerminal(this.workspaceRoot, this.project, { ...resolvedDefinition, ...definition }, env, []);
+    });
   }
 }
