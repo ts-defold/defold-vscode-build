@@ -13,8 +13,10 @@ export function activate(_context: vscode.ExtensionContext): void {
 
   vscode.workspace.findFiles('**/game.project', '**/node_modules/**', 1).then(
     (files) => {
-      if (files.length > 0)
-        taskProvider = vscode.tasks.registerTaskProvider('defold', new TaskProvider(workspaceRoot, files[0].fsPath));
+      if (files.length > 0) {
+        if (!taskProvider)
+          taskProvider = vscode.tasks.registerTaskProvider('defold', new TaskProvider(workspaceRoot, files[0].fsPath));
+      }
     },
     (_err) => {
       output().appendLine('Could not find game.project');
