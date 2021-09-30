@@ -1,13 +1,29 @@
 import * as path from 'path';
 import * as fs from 'fs';
-import * as os from 'os';
+import { platform } from 'os';
 import * as vscode from 'vscode';
 
 import output from '../output';
-import { CustomBuildTaskTerminal } from './terminal';
+import { DefoldTerminal } from './terminal';
 import type { DefoldBuildTaskDefinition, DefoldTaskEnv } from '../types';
 
-function parseDefoldConfig(editorPath: string): DefoldTaskEnv {
+function getDefoldTaskEnv(): DefoldTaskEnv {
+  // Resolve the editor path from the configuration settings
+  const settings = vscode.workspace.getConfiguration('defold');
+  let editorPath = settings.get<string>('editorPath');
+  if (!editorPath) return null;
+
+  // Resolve editor path per platform
+  switch (platform()) {
+    case 'darwin':
+      {
+        if (editorPath && !editorPath.endsWith('/Contents/Resources'))
+          editorPath = path.join(editorPath, 'Contents/Resources');
+      }
+      break;
+  }
+
+  // Parse the Defold Editor config file for the java, jdk, and defold jar
   const editorConfigPath = path.join(editorPath, 'config');
   if (!fs.existsSync(editorConfigPath)) return null;
 
@@ -72,6 +88,7 @@ export class TaskProvider implements vscode.TaskProvider {
   public async provideTasks(): Promise<vscode.Task[]> {
     if (this.tasks !== undefined) return this.tasks;
 
+    const env = getDefoldTaskEnv();
     this.tasks = ['build', 'bundle', 'clean', 'resolve', 'run'].map((flavor) => {
       return this.createTask(
         {
@@ -81,7 +98,7 @@ export class TaskProvider implements vscode.TaskProvider {
           platform: 'current',
           flags: [],
         },
-        null
+        env
       );
     });
 
@@ -93,28 +110,9 @@ export class TaskProvider implements vscode.TaskProvider {
    * * This must return the task.definition that is passed in or it will not match
    */
   public resolveTask(task: vscode.Task): vscode.Task | undefined {
-    // Resolve the editor path from the config
-    const config = vscode.workspace.getConfiguration('defold');
-    let editorPath = config.get<string>('editorPath');
-    if (editorPath) {
-      switch (os.platform()) {
-        case 'darwin':
-          {
-            if (editorPath && !editorPath.endsWith('/Contents/Resources'))
-              editorPath = path.join(editorPath, 'Contents/Resources');
-          }
-          break;
-      }
+    const env = getDefoldTaskEnv();
+    if (env) return this.createTask(task.definition as DefoldBuildTaskDefinition, env);
 
-      // Parse the Defold Editor config file for the java, jdk, and defold jar
-      if (editorPath && fs.existsSync(editorPath)) {
-        const env = parseDefoldConfig(editorPath);
-        if (env) return this.createTask(task.definition as DefoldBuildTaskDefinition, env);
-      }
-    }
-
-    // If we get here, we couldn't resolve the editor path
-    void vscode.window.showErrorMessage('Please set the Defold Editor Path in your user or workspace settings.');
     return undefined;
   }
 
@@ -125,15 +123,7 @@ export class TaskProvider implements vscode.TaskProvider {
       definition.action,
       TaskProvider.Type,
       new vscode.CustomExecution(async (): Promise<vscode.Pseudoterminal> => {
-        return new CustomBuildTaskTerminal(
-          this.workspaceRoot,
-          this.project,
-          definition,
-          env,
-          [],
-          () => this.sharedState,
-          (state: string) => (this.sharedState = state)
-        );
+        return new DefoldTerminal(this.workspaceRoot, this.project, definition, env, []);
       })
     );
   }
