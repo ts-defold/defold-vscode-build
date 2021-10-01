@@ -96,6 +96,7 @@ export class TaskProvider implements vscode.TaskProvider {
         configuration: 'debug',
         platform: 'current',
         flags: [],
+        problemMatcher: flavor === 'run' ? ['$defold-run'] : ['$defold-build'],
       };
       return new vscode.Task(
         definition,

@@ -2,7 +2,14 @@ import { dirname, join, basename } from 'path';
 import { ChildProcessWithoutNullStreams, spawn, execSync } from 'child_process';
 import { mkdirSync, existsSync, copyFileSync, rmSync, chmodSync } from 'fs';
 import { platform } from 'os';
+import * as _chalk from 'chalk';
+import * as readline from 'readline';
 import * as vscode from 'vscode';
+
+import type { ExtManifest } from '../types';
+
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const manifest = require('../../package.json') as ExtManifest;
 
 import type { DefoldBuildTaskDefinition, DefoldTaskEnv } from '../types';
 import output from '../output';
@@ -38,6 +45,9 @@ export class DefoldTerminal implements vscode.Pseudoterminal {
   onDidClose?: vscode.Event<number> = this.closeEmitter.event;
 
   private process: ChildProcessWithoutNullStreams | null = null;
+  private console: string[] = [];
+
+  private chalk = new _chalk.Instance({ level: 3 });
 
   constructor(
     private workspaceRoot: string,
@@ -54,6 +64,7 @@ export class DefoldTerminal implements vscode.Pseudoterminal {
       return;
     }
 
+    //* https://defold.com/manuals/bob/#usage
     const config = vscode.workspace.getConfiguration('defold');
     const projectDir = dirname(this.project);
     const target = this.definition.platform === 'current' ? HOST[platform()] : this.definition.platform;
@@ -187,18 +198,54 @@ export class DefoldTerminal implements vscode.Pseudoterminal {
   }
 
   private exec(command: string, args: string[]): void {
+    // Span the incoming process
     output().appendLine(`Execute: ${command} ${args.join(' ')}`);
     this.process = spawn(command, args, { cwd: this.workspaceRoot });
-    this.process.stdout.on('data', (data: Buffer) => {
-      this.writeEmitter.fire(data.toString().replace(/\r?\n/, '\r\n'));
-    });
 
-    this.process.stderr.on('data', (data: Buffer) => {
-      this.writeEmitter.fire(data.toString().replace(/\r?\n/, '\r\n'));
-    });
+    // Handle the process output
+    const stdout = readline.createInterface({ input: this.process.stdout, historySize: 0 });
+    stdout.on('line', (line) => this.decorateAndEmit('stdout', line.trim()));
 
+    // Handle the process error
+    const stderr = readline.createInterface({ input: this.process.stderr, historySize: 0 });
+    stderr.on('line', (line) => this.decorateAndEmit('stderr', line.trim()));
+
+    // Handle the process exit
     this.process.on('close', (code) => {
       this.closeEmitter.fire(code ?? 0);
     });
+  }
+
+  private decorateAndEmit(src: 'stdout' | 'stderr', line: string) {
+    const write = (line: string) => this.writeEmitter.fire(line + '\r\n');
+
+    for (const problemPattern of manifest.contributes.problemPatterns) {
+      const regex = new RegExp(problemPattern.regexp);
+      const match = regex.exec(line);
+      if (match) {
+        switch (problemPattern.name) {
+          case 'defold-run-diagnostic':
+          case 'defold-build-diagnostic':
+            {
+              const severity = match[problemPattern.severity];
+              switch (severity.toLowerCase()) {
+                case 'error':
+                  write(this.chalk.red(line));
+                  break;
+                case 'warning':
+                  write(this.chalk.yellow(line));
+                  break;
+                case 'info':
+                  write(this.chalk.blue(line));
+                  break;
+              }
+            }
+            return;
+        }
+      }
+    }
+
+    // default
+    write(this.definition.action !== 'run' && src === 'stderr' ? this.chalk.red(line) : this.chalk.white(line));
   }
 }

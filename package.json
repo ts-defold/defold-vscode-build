@@ -11,8 +11,8 @@
   "homepage": "https://github.com/ts-defold/defold-build-code/blob/main/README.md",
   "icon": "images/icon.png",
   "galleryBanner": {
-      "color": "#1e2226",
-      "theme": "dark"
+    "color": "#1e2226",
+    "theme": "dark"
   },
   "engines": {
     "vscode": "^1.60.0"
@@ -88,8 +88,14 @@
         "defold.build.android.bundleFormat": {
           "type": "string",
           "default": "apk",
-          "enum": ["apk", "aab"],
-          "enumDescriptions": ["Android Package Format (APK)", "Android App Bundle Format (AAB)"],
+          "enum": [
+            "apk",
+            "aab"
+          ],
+          "enumDescriptions": [
+            "Android Package Format (APK)",
+            "Android App Bundle Format (AAB)"
+          ],
           "description": "The Android bundle format to use when building the project."
         }
       }
@@ -148,6 +154,50 @@
           }
         }
       }
+    ],
+    "problemPatterns": [
+      {
+        "name": "defold-build-diagnostic",
+        "regexp": "^(ERROR|WARNING|INFO) ([a-zA-Z0-9/\\.]+):(\\d+)(.*)$",
+        "severity": 1,
+        "file": 2,
+        "line": 3,
+        "column": -1,
+        "message": 4
+      },
+      {
+        "name": "defold-run-diagnostic",
+        "regexp": "^(ERROR|WARNING|INFO):([A-Z]+):\\s?(?:([a-zA-Z0-9/\\.]+):(\\d+):)? (.*)$",
+        "severity": 1,
+        "file": 3,
+        "line": 4,
+        "column": -1,
+        "message": 5
+      }
+    ],
+    "problemMatchers": [
+      {
+        "name": "defold-build",
+        "owner": "defold",
+        "source": "build",
+        "applyTo": "allDocuments",
+        "fileLocation": [
+          "relative",
+          "${cwd}"
+        ],
+        "pattern": "$defold-build-diagnostic"
+      },
+      {
+        "name": "defold-run",
+        "owner": "defold",
+        "source": "build",
+        "applyTo": "allDocuments",
+        "fileLocation": [
+          "relative",
+          "${cwd}"
+        ],
+        "pattern": "$defold-run-diagnostic"
+      }
     ]
   },
   "scripts": {
@@ -161,6 +211,7 @@
     "test": "node ./out/test/runTest.js"
   },
   "devDependencies": {
+    "@types/chalk": "^2.2.0",
     "@types/glob": "^7.1.4",
     "@types/mocha": "^9.0.0",
     "@types/node": "14.x",
@@ -178,5 +229,8 @@
     "typescript": "^4.4.3",
     "webpack": "^5.52.1",
     "webpack-cli": "^4.8.0"
+  },
+  "dependencies": {
+    "chalk": "^4.1.2"
   }
 }

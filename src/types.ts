@@ -14,3 +14,16 @@ export interface DefoldBuildTaskDefinition extends TaskDefinition {
   configuration: 'debug' | 'release';
   platform: 'current' | 'android' | 'ios' | 'macOS' | 'windows' | 'linux' | 'html5';
 }
+
+export type ExtManifest = {
+  contributes: {
+    problemPatterns: {
+      name: string;
+      regexp: string;
+      severity: number;
+      file: number;
+      line: number;
+      message: number;
+    }[];
+  };
+};
