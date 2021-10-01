@@ -3,67 +3,53 @@
 </p>
 
 # Defold Build Tools
-
-Build, Run & Package Defold projects from Visual Studio Code
+<a href="https://discord.gg/eukcq5m"><img alt="Chat with us!" src="https://img.shields.io/discord/766898804896038942.svg?colorB=7581dc&logo=discord&logoColor=white"></a>
+> Build, Run & Package Defold projects from Visual Studio Code
 
 ## Features
-- adds build, bundle, clean, and run tasks 
+- `build`, `bundle`, `resolve`, `clean`, and `run`
 - problemMatchers for task output
-- sourcemap support for [TSTL](https://github.com/TypeScriptToLua/TypeScriptToLua)
+- colorized console output for enhanced readability
+- sourcemap support for sourcemaps emitted from [TSTL](https://github.com/TypeScriptToLua/TypeScriptToLua)
 
 ## Requirements
 
-Install the Defold editor and configure the settings to point to the installation location of the editor.
+Install the Defold editor and configure the `defold.editorPath` setting to point to the installation location of the editor.
 
 ## Extension Settings
 
-Include if your extension adds any VS Code settings through the `contributes.configuration` extension point.
+#### Defold
 
-For example:
+* `defold.editorPath`: Path to the Defold Editor, will attempt to infer path if this is not set
 
-This extension contributes the following settings:
+#### Build
 
-* `myExtension.enable`: enable/disable this extension
-* `myExtension.thing`: set to `blah` to do something
+* `defold.build.email`: Email address for Bob to use when logging in
+* `defold.build.auth`: Auth token for Bob to use when logging in
+* `defold.build.textureCompression`: Use texture compression as specified in texture profiles
+* `defold.build.withSymbols`: Use symbols when building the project
+* `defold.build.liveUpdate`: Should LiveUpdate content be published
 
-## Known Issues
+#### iOS
 
-Calling out known issues can help limit users opening duplicate issues against your extension.
+* `defold.build.ios.identity`: The name of the iOS signing identity to use when building the project
+* `defold.build.ios.mobileProvisioningProfilePath`: The path to the mobile provisioning profile to use when building the project
+
+#### Android
+
+* `defold.build.android.keystore`: The path to the Android keystore to use when building the project
+* `defold.build.android.keystorePass`: The password for the Android keystore to use when building the project
+* `defold.build.android.keystoreAlias`: The alias for the Android keystore to use when building the project
+* `defold.build.android.bundleFormat`: The Android bundle format to use when building the project
 
 ## Release Notes
 
 Users appreciate release notes as you update your extension.
 
-### 1.0.0
+### 0.0.0
 
-Initial release of ...
+Pending initial release
 
-### 1.0.1
-
-Fixed issue #.
-
-### 1.1.0
-
-Added features X, Y, and Z.
-
------------------------------------------------------------------------------------------------------------
-## Following extension guidelines
-
-Ensure that you've read through the extensions guidelines and follow the best practices for creating your extension.
-
-* [Extension Guidelines](https://code.visualstudio.com/api/references/extension-guidelines)
-
-## Working with Markdown
-
-**Note:** You can author your README using Visual Studio Code.  Here are some useful editor keyboard shortcuts:
-
-* Split the editor (`Cmd+\` on macOS or `Ctrl+\` on Windows and Linux)
-* Toggle preview (`Shift+CMD+V` on macOS or `Shift+Ctrl+V` on Windows and Linux)
-* Press `Ctrl+Space` (Windows, Linux) or `Cmd+Space` (macOS) to see a list of Markdown snippets
-
-### For more information
-
-* [Visual Studio Code's Markdown Support](http://code.visualstudio.com/docs/languages/markdown)
-* [Markdown Syntax Reference](https://help.github.com/articles/markdown-basics/)
-
-**Enjoy!**
+<p align="center" class="h4">
+  TypeScript :heart: Defold
+</p>
