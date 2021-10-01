@@ -1,4 +1,4 @@
-import { dirname, join, basename } from 'path';
+import { dirname, join, basename, relative } from 'path';
 import { ChildProcessWithoutNullStreams, spawn, execSync } from 'child_process';
 import { mkdirSync, existsSync, copyFileSync, rmSync, chmodSync } from 'fs';
 import { platform } from 'os';
@@ -227,6 +227,15 @@ export class DefoldTerminal implements vscode.Pseudoterminal {
           case 'defold-run-diagnostic':
           case 'defold-build-diagnostic':
             {
+              // Remap the path based on project root directory
+              const srcLine = match[problemPattern.line];
+              const file = match[problemPattern.file];
+              if (parseInt(srcLine) > 0 && file) {
+                const filePath = join(dirname(this.project), file);
+                line = line.replace(file, relative(this.workspaceRoot, filePath));
+              }
+
+              // Colorize the output based on severity
               const severity = match[problemPattern.severity];
               switch (severity.toLowerCase()) {
                 case 'error':
