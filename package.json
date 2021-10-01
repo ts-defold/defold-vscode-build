@@ -1,14 +1,14 @@
 {
-  "name": "defold-build",
-  "displayName": "Defold Build",
+  "name": "defold-vscode-build",
+  "displayName": "Defold Build Tools",
   "description": "Build, Run & Package Defold projects from Visual Studio Code",
   "version": "0.0.1",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/ts-defold/defold-build-code.git"
+    "url": "https://github.com/ts-defold/defold-vscode-build.git"
   },
-  "homepage": "https://github.com/ts-defold/defold-build-code/blob/main/README.md",
+  "homepage": "https://github.com/ts-defold/defold-vscode-build/blob/main/README.md",
   "icon": "images/icon.png",
   "galleryBanner": {
     "color": "#1e2226",
