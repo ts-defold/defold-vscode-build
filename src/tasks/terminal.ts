@@ -1,18 +1,16 @@
 import { dirname, join, basename, relative } from 'path';
 import { ChildProcessWithoutNullStreams, spawn, execSync } from 'child_process';
-import { mkdirSync, existsSync, copyFileSync, rmSync, chmodSync } from 'fs';
+import { mkdirSync, existsSync, copyFileSync, rmSync, chmodSync, readFileSync } from 'fs';
 import { platform } from 'os';
 import * as _chalk from 'chalk';
 import * as readline from 'readline';
 import * as vscode from 'vscode';
-
-import type { ExtManifest } from '../types';
+import { SourceMapConsumer } from 'source-map-js';
+import type { DefoldBuildTaskDefinition, DefoldTaskEnv, ExtManifest } from '../types';
+import output from '../output';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const manifest = require('../../package.json') as ExtManifest;
-
-import type { DefoldBuildTaskDefinition, DefoldTaskEnv } from '../types';
-import output from '../output';
 
 const HOST: Record<NodeJS.Platform, DefoldBuildTaskDefinition['platform']> = {
   darwin: 'macOS',
@@ -45,8 +43,7 @@ export class DefoldTerminal implements vscode.Pseudoterminal {
   onDidClose?: vscode.Event<number> = this.closeEmitter.event;
 
   private process: ChildProcessWithoutNullStreams | null = null;
-  private console: string[] = [];
-
+  private sourceMaps: Record<string, SourceMapConsumer> = {};
   private chalk = new _chalk.Instance({ level: 3 });
 
   constructor(
@@ -197,18 +194,18 @@ export class DefoldTerminal implements vscode.Pseudoterminal {
     this.process?.kill();
   }
 
-  private exec(command: string, args: string[]): void {
+  private exec(command: string, args: string[]) {
     // Span the incoming process
     output().appendLine(`Execute: ${command} ${args.join(' ')}`);
     this.process = spawn(command, args, { cwd: this.workspaceRoot });
 
     // Handle the process output
     const stdout = readline.createInterface({ input: this.process.stdout, historySize: 0 });
-    stdout.on('line', (line) => this.decorateAndEmit('stdout', line.trim()));
+    stdout.on('line', (line) => void this.decorateAndEmit('stdout', line.trim()));
 
     // Handle the process error
     const stderr = readline.createInterface({ input: this.process.stderr, historySize: 0 });
-    stderr.on('line', (line) => this.decorateAndEmit('stderr', line.trim()));
+    stderr.on('line', (line) => void this.decorateAndEmit('stderr', line.trim()));
 
     // Handle the process exit
     this.process.on('close', (code) => {
@@ -216,7 +213,7 @@ export class DefoldTerminal implements vscode.Pseudoterminal {
     });
   }
 
-  private decorateAndEmit(src: 'stdout' | 'stderr', line: string) {
+  private async decorateAndEmit(src: 'stdout' | 'stderr', line: string) {
     const write = (line: string) => this.writeEmitter.fire(line + '\r\n');
 
     for (const problemPattern of manifest.contributes.problemPatterns) {
@@ -227,13 +224,35 @@ export class DefoldTerminal implements vscode.Pseudoterminal {
           case 'defold-run-diagnostic':
           case 'defold-build-diagnostic':
             {
-              // Remap the path based on project root directory
-              const srcLine = match[problemPattern.line];
+              const lineNum = match[problemPattern.line];
               const file = match[problemPattern.file];
-              if (parseInt(srcLine) > 0 && file) {
-                const filePath = join(dirname(this.project), file);
-                line = line.replace(file, relative(this.workspaceRoot, filePath));
+              const filePath = join(dirname(this.project), file);
+
+              let remapped = false;
+              if (parseInt(lineNum) > 0 && file) {
+                const sourceMapPath = `${filePath}.map`;
+                if (existsSync(sourceMapPath)) {
+                  let sourceMap = this.sourceMaps[filePath];
+                  if (!sourceMap) {
+                    sourceMap = this.sourceMaps[filePath] = new SourceMapConsumer(
+                      JSON.parse(readFileSync(sourceMapPath).toString())
+                    );
+                  }
+
+                  const res = sourceMap.originalPositionFor({
+                    line: parseInt(lineNum),
+                    column: 0,
+                  });
+                  if (res.source) {
+                    remapped = true;
+                    line = line.replace(
+                      `${file}:${lineNum}`,
+                      `${relative(this.workspaceRoot, res.source)}:${res.line}`
+                    );
+                  }
+                }
               }
+              if (!remapped) line = line.replace(file, relative(this.workspaceRoot, filePath));
 
               // Colorize the output based on severity
               const severity = match[problemPattern.severity];

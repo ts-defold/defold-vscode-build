@@ -231,6 +231,7 @@
     "webpack-cli": "^4.8.0"
   },
   "dependencies": {
-    "chalk": "^4.1.2"
+    "chalk": "^4.1.2",
+    "source-map-js": "^0.6.2"
   }
 }
