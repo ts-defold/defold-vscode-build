@@ -28,19 +28,22 @@ Install the Defold editor and configure the `defold.editorPath` setting to point
 * `defold.build.auth`: Auth token for Bob to use when logging in
 * `defold.build.textureCompression`: Use texture compression as specified in texture profiles
 * `defold.build.withSymbols`: Use symbols when building the project
-* `defold.build.liveUpdate`: Should LiveUpdate content be published
+
+#### Bundle
+
+* `defold.bundle.liveUpdate`: Should LiveUpdate content be published
 
 #### iOS
 
-* `defold.build.ios.identity`: The name of the iOS signing identity to use when building the project
-* `defold.build.ios.mobileProvisioningProfilePath`: The path to the mobile provisioning profile to use when building the project
+* `defold.bundle.ios.identity`: The name of the iOS signing identity to use when building the project
+* `defold.bundle.ios.mobileProvisioningProfilePath`: The path to the mobile provisioning profile to use when building the project
 
 #### Android
 
-* `defold.build.android.keystore`: The path to the Android keystore to use when building the project
-* `defold.build.android.keystorePass`: The password for the Android keystore to use when building the project
-* `defold.build.android.keystoreAlias`: The alias for the Android keystore to use when building the project
-* `defold.build.android.bundleFormat`: The Android bundle format to use when building the project
+* `defold.bundle.android.keystore`: The path to the Android keystore to use when building the project
+* `defold.bundle.android.keystorePass`: The password for the Android keystore to use when building the project
+* `defold.bundle.android.keystoreAlias`: The alias for the Android keystore to use when building the project
+* `defold.bundle.android.bundleFormat`: The Android bundle format to use when building the project
 
 ## Release Notes
 

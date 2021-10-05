@@ -55,37 +55,37 @@
           "default": true,
           "description": "Use symbols when building the project."
         },
-        "defold.build.liveUpdate": {
+        "defold.bundle.liveUpdate": {
           "type": "boolean",
           "default": false,
           "description": "Should LiveUpdate content be published."
         },
-        "defold.build.ios.identity": {
+        "defold.bundle.ios.identity": {
           "type": "string",
           "default": "",
           "description": "The name of the iOS signing identity to use when building the project."
         },
-        "defold.build.ios.mobileProvisioningProfilePath": {
+        "defold.bundle.ios.mobileProvisioningProfilePath": {
           "type": "string",
           "default": "",
           "description": "The path to the mobile provisioning profile to use when building the project."
         },
-        "defold.build.android.keystore": {
+        "defold.bundle.android.keystore": {
           "type": "string",
           "default": "",
           "description": "The path to the Android keystore to use when building the project."
         },
-        "defold.build.android.keystorePass": {
+        "defold.bundle.android.keystorePass": {
           "type": "string",
           "default": "",
           "description": "The password for the Android keystore to use when building the project."
         },
-        "defold.build.android.keystoreAlias": {
+        "defold.bundle.android.keystoreAlias": {
           "type": "string",
           "default": "",
           "description": "The alias for the Android keystore to use when building the project."
         },
-        "defold.build.android.bundleFormat": {
+        "defold.bundle.android.bundleFormat": {
           "type": "string",
           "default": "apk",
           "enum": [

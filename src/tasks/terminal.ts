@@ -50,8 +50,7 @@ export class DefoldTerminal implements vscode.Pseudoterminal {
     private workspaceRoot: string,
     private project: string,
     private definition: DefoldBuildTaskDefinition,
-    private env: DefoldTaskEnv,
-    private flags: string[]
+    private env: DefoldTaskEnv
   ) {}
 
   open(_initialDimensions: vscode.TerminalDimensions | undefined): void {
@@ -70,9 +69,9 @@ export class DefoldTerminal implements vscode.Pseudoterminal {
       `-cp`,
       `${this.env.jar}`,
       `com.dynamo.bob.Bob`,
-      `--input`,
+      `-i`,
       `"${projectDir}"`,
-      `--root`,
+      `-r`,
       `"${projectDir}"`,
       `--exclude-build-folder`,
       `.git, build`,
@@ -87,14 +86,18 @@ export class DefoldTerminal implements vscode.Pseudoterminal {
         {
           options = [
             ...required,
-            `--email`,
+            `-e`,
             `${config.get<string>('build.email') ?? ''}`,
-            `--auth`,
+            `-u`,
             `${config.get<string>('build.auth') ?? ''}`,
+            `-tc`,
+            `${config.get<boolean>('build.textureCompression', false) ? 'true' : 'false'}`,
             `--variant`,
             `${this.definition.configuration}`,
-            this.definition.configuration === 'release' ? `--strip-executable` : '',
           ];
+          if (config.get<boolean>('build.withSymbols', false)) options.push(`--with-symbols`);
+          if (this.definition.configuration === 'release') options.push(`--strip-executable`);
+
           commands = [`resolve`, `build`];
         }
         break;
@@ -109,21 +112,41 @@ export class DefoldTerminal implements vscode.Pseudoterminal {
 
           options = [
             ...required,
-            `--email`,
+            `-e`,
             `${config.get<string>('build.email') ?? ''}`,
-            `--auth`,
+            `-u`,
             `${config.get<string>('build.auth') ?? ''}`,
-            `--archive`,
-            `--platform`,
+            `-a`,
+            `-p`,
             `${PLATFORMS[target]}`,
+            `-bo`,
+            `"${out}"`,
+            `-brhtml`,
+            `${join(out, 'build-report.html')}`,
             `--variant`,
             `${this.definition.configuration}`,
-            this.definition.configuration === 'release' ? `--strip-executable` : '',
-            `--bundle-output`,
-            `"${out}"`,
-            `--build-report-html`,
-            `${join(out, 'build-report.html')}`,
           ];
+          if (config.get<boolean>('build.withSymbols', false)) options.push(`--with-symbols`);
+          if (this.definition.configuration === 'release') options.push(`--strip-executable`);
+          if (config.get<boolean>('bundle.liveUpdate', false)) options.push(`-l`, `yes`);
+
+          // Mobile bundle options
+          if (target === 'ios') {
+            const identity = config.get<string>('bundle.ios.identity', '');
+            const mobileProvisioningProfilePath = config.get<string>('bundle.ios.mobileProvisioningProfilePath', '');
+            if (identity) options.push(`--identity`, identity);
+            if (mobileProvisioningProfilePath) options.push(`-mp`, mobileProvisioningProfilePath);
+          } else if (target === 'android') {
+            const keystore = config.get<string>('bundle.android.keystore', '');
+            const keystorePassword = config.get<string>('bundle.android.keystorePass', '');
+            const keystoreAlias = config.get<string>('bundle.android.keystoreAlias', '');
+            const bundleFormat = config.get<string>('bundle.android.bundleFormat', 'apk');
+            if (keystore) options.push(`--keystore`, keystore);
+            if (keystorePassword) options.push(`--keystore-pass`, keystorePassword);
+            if (keystoreAlias) options.push(`--keystore-alias`, keystoreAlias);
+            if (bundleFormat) options.push(`--bundle-format`, bundleFormat);
+          }
+
           commands = [`resolve`, `distclean`, `build`, `bundle`];
         }
         break;
@@ -137,9 +160,9 @@ export class DefoldTerminal implements vscode.Pseudoterminal {
         {
           options = [
             ...required,
-            `--email`,
+            `-e`,
             `${config.get<string>('build.email') ?? ''}`,
-            `--auth`,
+            `-u`,
             `${config.get<string>('build.auth') ?? ''}`,
           ];
           commands = [`resolve`];

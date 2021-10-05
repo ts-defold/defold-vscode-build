@@ -95,7 +95,6 @@ export class TaskProvider implements vscode.TaskProvider {
         type: TaskProvider.Type,
         configuration: 'debug',
         platform: 'current',
-        flags: [],
         problemMatcher: flavor === 'run' ? ['$defold-run'] : ['$defold-build'],
       };
       return new vscode.Task(
@@ -124,7 +123,7 @@ export class TaskProvider implements vscode.TaskProvider {
 
   private createExecution(definition: DefoldBuildTaskDefinition, env: DefoldTaskEnv): vscode.CustomExecution {
     return new vscode.CustomExecution(async (resolvedDefinition): Promise<vscode.Pseudoterminal> => {
-      return new DefoldTerminal(this.workspaceRoot, this.project, { ...resolvedDefinition, ...definition }, env, []);
+      return new DefoldTerminal(this.workspaceRoot, this.project, { ...resolvedDefinition, ...definition }, env);
     });
   }
 }

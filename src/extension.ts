@@ -11,6 +11,9 @@ export function activate(_context: vscode.ExtensionContext): void {
       : undefined;
   if (!workspaceRoot) return;
 
+  // TODO: Notify to set the path to the Defold Editor
+
+  // Register task provider if we are in a workspace with a game.project file
   vscode.workspace.findFiles('**/game.project', '**/node_modules/**', 1).then(
     (files) => {
       if (files.length > 0) {
