@@ -5,6 +5,7 @@ All notable changes to the "defold-vscode-build" extension will be documented in
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
 ## [Unreleased]
+- Copy OpenAL32.dll and wrap_oal.dll dependencies on windows
 
 ### 0.1.1 - 2021-10-05
 - Notifications to remind you to configure the extensions in settings
