@@ -1,4 +1,4 @@
-import { join } from 'path';
+import { dirname, join } from 'path';
 import { existsSync, readFileSync } from 'fs';
 import { platform } from 'os';
 import * as vscode from 'vscode';
@@ -21,6 +21,9 @@ function getDefoldTaskEnv(): DefoldTaskEnv {
           editorPath = join(editorPath, 'Contents/Resources');
       }
       break;
+    default: {
+      if (editorPath) editorPath = dirname(editorPath);
+    }
   }
 
   // Parse the Defold Editor config file for the java, jdk, and defold jar
