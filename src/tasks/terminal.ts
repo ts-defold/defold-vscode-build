@@ -231,7 +231,9 @@ export class DefoldTerminal implements vscode.Pseudoterminal {
           commands = [join(out, 'game.projectc')];
 
           if (!existsSync(exec)) {
-            this.writeEmitter.fire(`Build before running`);
+            this.writeEmitter.fire(
+              this.chalk.yellow(`Did you build first? Required dmengine binary is missing!`) + '\r\n'
+            );
             this.closeEmitter.fire(1);
             return;
           }
