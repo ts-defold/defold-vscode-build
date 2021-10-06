@@ -2,10 +2,10 @@
   "name": "defold-vscode-build",
   "displayName": "Defold Build Tools",
   "description": "Build, Run & Package Defold projects from Visual Studio Code",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "publisher": "ts-defold",
-    "author": {
-      "name": "Justin Walsh <contact.me@thejustinwalsh.com>"
+  "author": {
+    "name": "Justin Walsh <contact.me@thejustinwalsh.com>"
   },
   "license": "MIT",
   "repository": {
