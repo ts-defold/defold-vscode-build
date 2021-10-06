@@ -7,7 +7,8 @@ import * as readline from 'readline';
 import * as vscode from 'vscode';
 import { SourceMapConsumer } from 'source-map-js';
 import type { DefoldBuildTaskDefinition, DefoldTaskEnv, ExtManifest } from '../types';
-import output from '../output';
+import { editorPathError } from '../util/notifications';
+import output from '../util/output';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const manifest = require('../../package.json') as ExtManifest;
@@ -35,6 +36,58 @@ const PLATFORMS: Record<DefoldBuildTaskDefinition['platform'], string> = {
   html5: 'js-web',
 };
 
+function getDefoldTaskEnv(): DefoldTaskEnv {
+  // Resolve the editor path from the configuration settings
+  const settings = vscode.workspace.getConfiguration('defold');
+  let editorPath = settings.get<string>('editorPath');
+  if (!editorPath) return null;
+
+  // Resolve editor path per platform
+  switch (platform()) {
+    case 'darwin':
+      {
+        if (editorPath && !editorPath.endsWith('/Contents/Resources'))
+          editorPath = join(editorPath, 'Contents/Resources');
+      }
+      break;
+    default: {
+      if (editorPath) editorPath = dirname(editorPath);
+    }
+  }
+
+  // Parse the Defold Editor config file for the java, jdk, and defold jar
+  const editorConfigPath = join(editorPath, 'config');
+  if (!existsSync(editorConfigPath)) return null;
+
+  const editorConfig = readFileSync(editorConfigPath, 'utf8');
+  const lines = editorConfig.split('\n');
+  const config: Record<string, string> = {};
+  for (const line of lines) {
+    const parts = line.split(/\s*=\s*/);
+    if (parts.length === 2) config[parts[0]] = parts[1];
+  }
+
+  /* eslint-disable @typescript-eslint/no-non-null-assertion */
+  return {
+    editorPath,
+    version: config['version']!,
+    editorSha1: config['editor_sha1']!,
+    jdk: join(editorPath, config['jdk']!.replace('${bootstrap.resourcespath}', config['resourcespath'])),
+    java: config['java']!.replace(
+      '${launcher.jdk}',
+      join(editorPath, config['jdk']!.replace('${bootstrap.resourcespath}', config['resourcespath']))
+    ),
+    jar: join(
+      editorPath,
+      config['jar']!.replace('${bootstrap.resourcespath}', config['resourcespath']).replace(
+        '${build.editor_sha1}',
+        config['editor_sha1']
+      )
+    ),
+  };
+  /* eslint-enable @typescript-eslint/no-non-null-assertion */
+}
+
 export class DefoldTerminal implements vscode.Pseudoterminal {
   private writeEmitter = new vscode.EventEmitter<string>();
   onDidWrite: vscode.Event<string> = this.writeEmitter.event;
@@ -50,12 +103,14 @@ export class DefoldTerminal implements vscode.Pseudoterminal {
     private workspaceRoot: string,
     private project: string,
     private definition: DefoldBuildTaskDefinition,
-    private env: DefoldTaskEnv
+    private env = getDefoldTaskEnv()
   ) {}
 
   open(_initialDimensions: vscode.TerminalDimensions | undefined): void {
-    // TODO: If we are here and have no env, what should we do?
+    this.env = this.env ?? getDefoldTaskEnv();
     if (!this.env) {
+      editorPathError();
+      this.writeEmitter.fire(this.chalk.red('Could not find a valid path to the Defold Editor.') + '\r\n');
       this.closeEmitter.fire(1);
       return;
     }

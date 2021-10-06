@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
-import output from './output';
+import { editorPathInfo } from './util/notifications';
+import output from './util/output';
 import { TaskProvider } from './tasks/provider';
 
 let taskProvider: vscode.Disposable | undefined;
@@ -11,7 +12,10 @@ export function activate(_context: vscode.ExtensionContext): void {
       : undefined;
   if (!workspaceRoot) return;
 
-  // TODO: Notify to set the path to the Defold Editor
+  // Resolve the editor path, and ask the user to provide it, if it's not found
+  const settings = vscode.workspace.getConfiguration('defold');
+  const editorPath = settings.get<string>('editorPath');
+  if (!editorPath) editorPathInfo();
 
   // Register task provider if we are in a workspace with a game.project file
   vscode.workspace.findFiles('**/game.project', '**/node_modules/**', 1).then(
