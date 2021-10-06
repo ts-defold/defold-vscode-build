@@ -16,7 +16,7 @@
 
 Install the Defold editor and configure the `defold.editorPath` setting to point to the installation location of the editor.
 
-## Setup Guide
+## Quick Start
 
 Open the command pallette with `⌘ + shift + p` or `ctrl + shift + p`
 
@@ -100,5 +100,5 @@ You can always fully define your own tasks using any of the tasks that the `defo
 - Initial release
 
 <p align="center" class="h4">
-  TypeScript :heart: Defold
+  TypeScript ❤️ Defold
 </p>
