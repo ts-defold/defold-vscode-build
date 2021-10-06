@@ -1,7 +1,7 @@
 {
   "name": "defold-vscode-build",
   "displayName": "Defold Build Tools",
-  "description": "Build, Run & Package Defold projects from Visual Studio Code",
+  "description": "Build, Run & Package Defold Projects",
   "version": "0.1.0",
   "publisher": "ts-defold",
   "author": {
