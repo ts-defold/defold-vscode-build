@@ -3,23 +3,38 @@
   "displayName": "Defold Build Tools",
   "description": "Build, Run & Package Defold projects from Visual Studio Code",
   "version": "0.0.1",
+  "publisher": "ts-defold",
+    "author": {
+      "name": "Justin Walsh <contact.me@thejustinwalsh.com>"
+  },
   "license": "MIT",
   "repository": {
     "type": "git",
     "url": "https://github.com/ts-defold/defold-vscode-build.git"
   },
   "homepage": "https://github.com/ts-defold/defold-vscode-build/blob/main/README.md",
+  "keywords": [
+    "typescript",
+    "lua",
+    "task-provider",
+    "problem-matcher",
+    "defold",
+    "bob",
+    "build"
+  ],
+  "engines": {
+    "vscode": "^1.60.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Formatters",
+    "Other"
+  ],
   "icon": "images/icon.png",
   "galleryBanner": {
     "color": "#1e2226",
     "theme": "dark"
   },
-  "engines": {
-    "vscode": "^1.60.0"
-  },
-  "categories": [
-    "Other"
-  ],
   "activationEvents": [
     "onCommand:workbench.action.tasks.runTask",
     "workspaceContains:**/game.project"
