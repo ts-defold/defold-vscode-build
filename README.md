@@ -49,9 +49,9 @@ Install the Defold editor and configure the `defold.editorPath` setting to point
 
 Users appreciate release notes as you update your extension.
 
-### 0.0.0
+### 0.1.0
 
-Pending initial release
+- Initial release
 
 <p align="center" class="h4">
   TypeScript :heart: Defold
