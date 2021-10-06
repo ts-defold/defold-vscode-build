@@ -6,6 +6,7 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ## [Unreleased]
 - Copy OpenAL32.dll and wrap_oal.dll dependencies on windows
+- Set CWD for run task and use relative URI for game.projectc path
 
 ### 0.1.1 - 2021-10-05
 - Notifications to remind you to configure the extensions in settings

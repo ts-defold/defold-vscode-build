@@ -135,6 +135,7 @@ export class DefoldTerminal implements vscode.Pseudoterminal {
     let exec = java;
     let options: string[] = [];
     let commands: string[] = [];
+    let cwd = this.workspaceRoot;
 
     switch (this.definition.action) {
       case 'build':
@@ -225,10 +226,10 @@ export class DefoldTerminal implements vscode.Pseudoterminal {
         break;
       case 'run':
         {
-          const out = join(projectDir, 'build', 'default');
-          exec = join(out, platform() === 'win32' ? 'dmengine.exe' : 'dmengine');
+          cwd = join(projectDir, 'build', 'default');
+          exec = join(cwd, platform() === 'win32' ? 'dmengine.exe' : 'dmengine');
           options = [];
-          commands = [join(out, 'game.projectc')];
+          commands = ['./game.projectc'];
         }
         break;
     }
@@ -238,7 +239,7 @@ export class DefoldTerminal implements vscode.Pseudoterminal {
 
     // Execute the command
     // TODO: ENV variables - https://github.com/defold/defold/blob/ef879961c127c1b1e533b87ce60423387f1ef190/editor/src/clj/editor/engine.clj#L269
-    this.exec(exec, [...options, ...commands]);
+    this.exec(exec, [...options, ...commands], cwd);
   }
 
   close(): void {
@@ -295,10 +296,10 @@ export class DefoldTerminal implements vscode.Pseudoterminal {
     }
   }
 
-  private exec(command: string, args: string[]) {
+  private exec(command: string, args: string[], cwd?: string): void {
     // Spawn the incoming process
     output().appendLine(`Execute: ${command} ${args.join(' ')}`);
-    this.process = spawn(command, args, { cwd: this.workspaceRoot });
+    this.process = spawn(command, args, { cwd: cwd ?? this.workspaceRoot });
 
     // Handle the process output
     const stdout = readline.createInterface({ input: this.process.stdout, historySize: 0 });
