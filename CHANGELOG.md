@@ -6,6 +6,9 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ## [Unreleased]
 
+### 0.1.3 - 2021-10-6
+- Fix run task bug on Windows when project uses native extensions
+
 ### 0.1.2 - 2021-10-6
 - Fix run task on Windows
 

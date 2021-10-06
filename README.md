@@ -86,6 +86,9 @@ You can always fully define your own tasks using any of the tasks that the `defo
 
 ## Release Notes
 
+### 0.1.3 - 2021-10-6
+- Fix run task bug on Windows when project uses native extensions
+
 ### 0.1.2 - 2021-10-6
 - Fix run task on Windows
 
