@@ -86,6 +86,9 @@ You can always fully define your own tasks using any of the tasks that the `defo
 
 ## Release Notes
 
+### 0.1.4 - 2021-10-6
+- Update problem matcher to catch native extension errors from build
+
 ### 0.1.3 - 2021-10-6
 - Fix run task bug on Windows when project uses native extensions
 

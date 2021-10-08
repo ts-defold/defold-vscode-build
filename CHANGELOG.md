@@ -6,6 +6,9 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ## [Unreleased]
 
+### 0.1.4 - 2021-10-6
+- Update problem matcher to catch native extension errors from build
+
 ### 0.1.3 - 2021-10-6
 - Fix run task bug on Windows when project uses native extensions
 
