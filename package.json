@@ -173,7 +173,7 @@
     "problemPatterns": [
       {
         "name": "defold-build-diagnostic",
-        "regexp": "^(ERROR|WARNING|INFO) ([a-zA-Z0-9\\\\/\\-\\.]+):(\\d+)(.*)$",
+        "regexp": "^(ERROR|WARNING|INFO):? ([a-zA-Z0-9\\\\/\\-\\.]+):(\\d+)(.*)$",
         "severity": 1,
         "file": 2,
         "line": 3,
