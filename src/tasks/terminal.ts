@@ -1,6 +1,6 @@
 import { dirname, join, basename, relative } from 'path';
 import { ChildProcessWithoutNullStreams, spawn, execSync } from 'child_process';
-import { mkdirSync, existsSync, copyFileSync, rmSync, chmodSync, readFileSync } from 'fs';
+import { mkdirSync, existsSync, copyFileSync, rmSync, chmodSync, readFileSync, readdirSync } from 'fs';
 import { platform } from 'os';
 import * as _chalk from 'chalk';
 import * as readline from 'readline';
@@ -40,7 +40,10 @@ function getDefoldTaskEnv(): DefoldTaskEnv {
   // Resolve the editor path from the configuration settings
   const settings = vscode.workspace.getConfiguration('defold');
   let editorPath = settings.get<string>('editorPath');
-  if (!editorPath) return null;
+  if (!editorPath) {
+    output().appendLine('The `defold.editorPath` key is empty in the user and workspace settings.');
+    return null;
+  }
 
   // Resolve editor path per platform
   switch (platform()) {
@@ -55,10 +58,25 @@ function getDefoldTaskEnv(): DefoldTaskEnv {
     }
   }
 
-  // Parse the Defold Editor config file for the java, jdk, and defold jar
-  const editorConfigPath = join(editorPath, 'config');
-  if (!existsSync(editorConfigPath)) return null;
+  // Check to see if the directory provided is the right shape
+  let [hasDefold, hasConfig] = ['', ''];
+  readdirSync(editorPath).forEach((file) => {
+    if (file.toLowerCase() === 'config') hasConfig = file;
+    if (file.toLowerCase() === 'packages') {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      readdirSync(join(editorPath!, file)).forEach((file) => {
+        if (/defold.*\.jar$/i.exec(file) !== null) hasDefold = file;
+      });
+    }
+  });
+  if (!hasDefold || !hasConfig) {
+    output().appendLine(`Editor path is not the correct shape...`);
+    output().appendLine(`\thasDefold: "${hasDefold}", hasConfig: "${hasConfig}"`);
+    return null;
+  }
 
+  // Parse the Defold Editor config file for the java, jdk, and defold jar
+  const editorConfigPath = join(editorPath, hasConfig);
   const editorConfig = readFileSync(editorConfigPath, 'utf8');
   const lines = editorConfig.split('\n');
   const config: Record<string, string> = {};
@@ -67,25 +85,35 @@ function getDefoldTaskEnv(): DefoldTaskEnv {
     if (parts.length === 2) config[parts[0]] = parts[1];
   }
 
-  /* eslint-disable @typescript-eslint/no-non-null-assertion */
-  return {
-    editorPath,
-    version: config['version']!,
-    editorSha1: config['editor_sha1']!,
-    jdk: join(editorPath, config['jdk']!.replace('${bootstrap.resourcespath}', config['resourcespath'])),
-    java: config['java']!.replace(
-      '${launcher.jdk}',
-      join(editorPath, config['jdk']!.replace('${bootstrap.resourcespath}', config['resourcespath']))
-    ),
-    jar: join(
+  let env: DefoldTaskEnv = null;
+  try {
+    /* eslint-disable @typescript-eslint/no-non-null-assertion */
+    env = {
       editorPath,
-      config['jar']!.replace('${bootstrap.resourcespath}', config['resourcespath']).replace(
-        '${build.editor_sha1}',
-        config['editor_sha1']
-      )
-    ),
-  };
-  /* eslint-enable @typescript-eslint/no-non-null-assertion */
+      version: config['version']!,
+      editorSha1: config['editor_sha1']!,
+      jdk: join(editorPath, config['jdk']!.replace('${bootstrap.resourcespath}', config['resourcespath'])),
+      java: config['java']!.replace(
+        '${launcher.jdk}',
+        join(editorPath, config['jdk']!.replace('${bootstrap.resourcespath}', config['resourcespath']))
+      ),
+      jar: join(
+        editorPath,
+        config['jar']!.replace('${bootstrap.resourcespath}', config['resourcespath']).replace(
+          '${build.editor_sha1}',
+          config['editor_sha1']
+        )
+      ),
+    };
+    /* eslint-enable @typescript-eslint/no-non-null-assertion */
+  } catch (e) {
+    const error = e as Error;
+    output().appendLine(`Failed to parse editor config file...`);
+    output().appendLine(`\t${error.message}`);
+    return null;
+  }
+
+  return env;
 }
 
 export class DefoldTerminal implements vscode.Pseudoterminal {
