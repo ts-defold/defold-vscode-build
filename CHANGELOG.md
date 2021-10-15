@@ -5,7 +5,13 @@ All notable changes to the "defold-vscode-build" extension will be documented in
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
 ## [Unreleased]
+
+### 0.1.5 - 2021-10-15
 - Better editor path resolution
+- Copy dmEngine from local build before attempting to resolve from Editor package
+- Handle spaces in paths more gracefully
+- More diagnostics and error handling
+
 ### 0.1.4 - 2021-10-6
 - Update problem matcher to catch native extension errors from build
 
