@@ -48,7 +48,7 @@
           "type": "string",
           "default": "",
           "scope": "machine-overridable",
-          "description": "Path to the Defold Editor, will attempt to infer path if this is not set."
+          "description": "Full path to the Defold Editor or the Defold Editor installation directory"
         },
         "defold.build.email": {
           "type": "string",
