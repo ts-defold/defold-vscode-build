@@ -1,4 +1,4 @@
-import { dirname, join, basename, relative } from 'path';
+import { dirname, join, basename, relative, extname, sep } from 'path';
 import { ChildProcessWithoutNullStreams, spawn, execSync } from 'child_process';
 import { mkdirSync, existsSync, copyFileSync, rmSync, chmodSync, readFileSync, readdirSync } from 'fs';
 import { platform, homedir } from 'os';
@@ -45,22 +45,26 @@ function getDefoldTaskEnv(): DefoldTaskEnv {
     return null;
   }
 
-  // Resolve editor path per platform
-  switch (platform()) {
-    case 'darwin':
-      {
-        if (editorPath && !editorPath.endsWith('/Contents/Resources'))
-          editorPath = join(editorPath, 'Contents/Resources');
-      }
-      break;
-    default: {
-      if (editorPath) editorPath = dirname(editorPath);
-    }
-  }
-
   // Resolve ~ in path
   if (editorPath && editorPath.startsWith('~'))
     editorPath = join(process.env.HOME || homedir() || '', editorPath.slice(1));
+
+  // Ensure we root the incoming path
+  if (editorPath.endsWith(sep)) dirname(join(editorPath, '.'));
+
+  // Resolve editor path per platform
+  switch (platform()) {
+    case 'win32': {
+      if (editorPath && extname(editorPath) === '.exe') editorPath = dirname(editorPath);
+      break;
+    }
+    case 'darwin': {
+      if (editorPath && !editorPath.endsWith('/Contents/Resources'))
+        editorPath = join(editorPath, 'Contents/Resources');
+      break;
+    }
+  }
+  output().appendLine(`Resolved editor path: ${editorPath}`);
 
   // Check to see if the directory provided is the right shape
   let [hasDefold, hasConfig] = ['', ''];
