@@ -1,7 +1,7 @@
 import { dirname, join, basename, relative } from 'path';
 import { ChildProcessWithoutNullStreams, spawn, execSync } from 'child_process';
 import { mkdirSync, existsSync, copyFileSync, rmSync, chmodSync, readFileSync, readdirSync } from 'fs';
-import { platform } from 'os';
+import { platform, homedir } from 'os';
 import * as _chalk from 'chalk';
 import * as readline from 'readline';
 import * as vscode from 'vscode';
@@ -57,6 +57,10 @@ function getDefoldTaskEnv(): DefoldTaskEnv {
       if (editorPath) editorPath = dirname(editorPath);
     }
   }
+
+  // Resolve ~ in path
+  if (editorPath && editorPath.startsWith('~'))
+    editorPath = join(process.env.HOME || homedir() || '', editorPath.slice(1));
 
   // Check to see if the directory provided is the right shape
   let [hasDefold, hasConfig] = ['', ''];
