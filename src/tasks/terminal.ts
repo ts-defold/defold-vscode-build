@@ -9,7 +9,6 @@ import { SourceMapConsumer } from 'source-map-js';
 import type { DefoldBuildTaskDefinition, DefoldTaskEnv, ExtManifest } from '../types';
 import { editorPathError } from '../util/notifications';
 import output from '../util/output';
-import escape from '../util/escape';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const manifest = require('../../package.json') as ExtManifest;
@@ -32,6 +31,16 @@ const PLATFORMS: Record<DefoldBuildTaskDefinition['platform'], string> = {
   android: 'armv7-android',
   ios: 'armv7-darwin',
   macOS: 'x86_64-darwin',
+  windows: 'x86_64-win32',
+  linux: 'x86_64-linux',
+  html5: 'js-web',
+};
+
+const OUTPUTS: Record<DefoldBuildTaskDefinition['platform'], string> = {
+  current: '',
+  android: 'armv7-android',
+  ios: 'armv7-ios',
+  macOS: 'x86_64-osx',
   windows: 'x86_64-win32',
   linux: 'x86_64-linux',
   html5: 'js-web',
@@ -69,15 +78,23 @@ function getDefoldTaskEnv(): DefoldTaskEnv {
 
   // Check to see if the directory provided is the right shape
   let [hasDefold, hasConfig] = ['', ''];
-  readdirSync(editorPath).forEach((file) => {
-    if (file.toLowerCase() === 'config') hasConfig = file;
-    if (file.toLowerCase() === 'packages') {
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      readdirSync(join(editorPath!, file)).forEach((file) => {
-        if (/defold.*\.jar$/i.exec(file) !== null) hasDefold = file;
-      });
-    }
-  });
+  try {
+    readdirSync(editorPath).forEach((file) => {
+      if (file.toLowerCase() === 'config') hasConfig = file;
+      if (file.toLowerCase() === 'packages') {
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        readdirSync(join(editorPath!, file)).forEach((file) => {
+          if (/defold.*\.jar$/i.exec(file) !== null) hasDefold = file;
+        });
+      }
+    });
+  } catch (e) {
+    const error = e as Error;
+    output().appendLine(`Unable to read the editor path...`);
+    output().appendLine(`\t${error.message}`);
+    return null;
+  }
+
   if (!hasDefold || !hasConfig) {
     output().appendLine(`Editor path is not the correct shape...`);
     output().appendLine(`\thasDefold: "${hasDefold}", hasConfig: "${hasConfig}"`);
@@ -162,9 +179,9 @@ export class DefoldTerminal implements vscode.Pseudoterminal {
       `${this.env.jar}`,
       `com.dynamo.bob.Bob`,
       `-i`,
-      escape(projectDir),
+      `"${projectDir}"`,
       `-r`,
-      escape(projectDir),
+      `"${projectDir}"`,
       `--exclude-build-folder`,
       `.git, build`,
     ];
@@ -196,7 +213,7 @@ export class DefoldTerminal implements vscode.Pseudoterminal {
         break;
       case 'bundle':
         {
-          const out = join(this.workspaceRoot, 'bundle', target);
+          const out = join(this.workspaceRoot, 'bundle', OUTPUTS[target]);
           try {
             mkdirSync(out, { recursive: true });
           } catch (e) {
@@ -213,9 +230,9 @@ export class DefoldTerminal implements vscode.Pseudoterminal {
             `-p`,
             `${PLATFORMS[target]}`,
             `-bo`,
-            `${escape(out)}`,
+            `"${out}"`,
             `-brhtml`,
-            `${escape(join(out, 'build-report.html'))}`,
+            `"${join(out, 'build-report.html')}"`,
             `--variant`,
             `${this.definition.configuration}`,
           ];
@@ -228,13 +245,13 @@ export class DefoldTerminal implements vscode.Pseudoterminal {
             const identity = config.get<string>('bundle.ios.identity', '');
             const mobileProvisioningProfilePath = config.get<string>('bundle.ios.mobileProvisioningProfilePath', '');
             if (identity) options.push(`--identity`, identity);
-            if (mobileProvisioningProfilePath) options.push(`-mp`, escape(mobileProvisioningProfilePath));
+            if (mobileProvisioningProfilePath) options.push(`-mp`, `"${mobileProvisioningProfilePath}"`);
           } else if (target === 'android') {
             const keystore = config.get<string>('bundle.android.keystore', '');
             const keystorePassword = config.get<string>('bundle.android.keystorePass', '');
             const keystoreAlias = config.get<string>('bundle.android.keystoreAlias', '');
             const bundleFormat = config.get<string>('bundle.android.bundleFormat', 'apk');
-            if (keystore) options.push(`--keystore`, escape(keystore));
+            if (keystore) options.push(`--keystore`, `"${keystore}"`);
             if (keystorePassword) options.push(`--keystore-pass`, keystorePassword);
             if (keystoreAlias) options.push(`--keystore-alias`, keystoreAlias);
             if (bundleFormat) options.push(`--bundle-format`, bundleFormat);
@@ -324,17 +341,48 @@ export class DefoldTerminal implements vscode.Pseudoterminal {
         break;
     }
 
-    // Extract the engine dependencies
+    output().appendLine(`Copying Dependencies...`);
+
+    // Copy the prebuilt dmengine and dependencies to the project directory first
+    const hostBuildDir = join(projectDir, 'build', OUTPUTS[HOST[platform()]]);
+    try {
+      readdirSync(hostBuildDir).forEach((file) => {
+        const depIndex = deps.findIndex((dep) => basename(dep) === file);
+
+        // Filter files to copy
+        let target = '';
+        if (depIndex !== -1) {
+          target = file;
+          deps.splice(depIndex, 1);
+        } else if (['.pdb'].includes(extname(file))) {
+          // TODO: copy dSYM folder
+          target = file;
+        }
+
+        // Copy file
+        if (target) {
+          const src = join(hostBuildDir, file);
+          const dest = join(projectDir, 'build', 'default', file);
+          copyFileSync(src, dest);
+          if (file.startsWith('dmengine')) chmodSync(dest, '755');
+          output().appendLine(`-> ${file}`);
+        }
+      });
+    } catch (e) {
+      const error = e as Error;
+      output().appendLine(`Failed to copy dependencies...`);
+      output().appendLine(`\t${error.message}`);
+    }
+
+    // Extract remaining dependencies from the engine archive
     const out = join(projectDir, 'build', 'default');
     const path = deps[0];
     const archive = this.env.jar;
 
     const required = deps.filter((dep) => !existsSync(join(out, basename(dep))));
     if (required.length > 0) {
-      output().appendLine(`Copying Dependencies...`);
-
       required.forEach((dep) => {
-        execSync(`${jar} -xf ${escape(archive)} ${escape(dep)}`, { cwd: out });
+        execSync(`${jar} -xf "${archive}" "${dep}"`, { cwd: out });
         copyFileSync(join(out, dep), join(out, basename(dep)));
         output().appendLine(`-> ${basename(dep)}`);
       });
