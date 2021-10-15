@@ -5,7 +5,7 @@ All notable changes to the "defold-vscode-build" extension will be documented in
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
 ## [Unreleased]
-
+- Better editor path resolution
 ### 0.1.4 - 2021-10-6
 - Update problem matcher to catch native extension errors from build
 
