@@ -9,6 +9,7 @@ import { SourceMapConsumer } from 'source-map-js';
 import type { DefoldBuildTaskDefinition, DefoldTaskEnv, ExtManifest } from '../types';
 import { editorPathError } from '../util/notifications';
 import output from '../util/output';
+import escape from '../util/escape';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const manifest = require('../../package.json') as ExtManifest;
@@ -161,9 +162,9 @@ export class DefoldTerminal implements vscode.Pseudoterminal {
       `${this.env.jar}`,
       `com.dynamo.bob.Bob`,
       `-i`,
-      `"${projectDir}"`,
+      escape(projectDir),
       `-r`,
-      `"${projectDir}"`,
+      escape(projectDir),
       `--exclude-build-folder`,
       `.git, build`,
     ];
@@ -212,9 +213,9 @@ export class DefoldTerminal implements vscode.Pseudoterminal {
             `-p`,
             `${PLATFORMS[target]}`,
             `-bo`,
-            `"${out}"`,
+            `${escape(out)}`,
             `-brhtml`,
-            `${join(out, 'build-report.html')}`,
+            `${escape(join(out, 'build-report.html'))}`,
             `--variant`,
             `${this.definition.configuration}`,
           ];
@@ -227,13 +228,13 @@ export class DefoldTerminal implements vscode.Pseudoterminal {
             const identity = config.get<string>('bundle.ios.identity', '');
             const mobileProvisioningProfilePath = config.get<string>('bundle.ios.mobileProvisioningProfilePath', '');
             if (identity) options.push(`--identity`, identity);
-            if (mobileProvisioningProfilePath) options.push(`-mp`, mobileProvisioningProfilePath);
+            if (mobileProvisioningProfilePath) options.push(`-mp`, escape(mobileProvisioningProfilePath));
           } else if (target === 'android') {
             const keystore = config.get<string>('bundle.android.keystore', '');
             const keystorePassword = config.get<string>('bundle.android.keystorePass', '');
             const keystoreAlias = config.get<string>('bundle.android.keystoreAlias', '');
             const bundleFormat = config.get<string>('bundle.android.bundleFormat', 'apk');
-            if (keystore) options.push(`--keystore`, keystore);
+            if (keystore) options.push(`--keystore`, escape(keystore));
             if (keystorePassword) options.push(`--keystore-pass`, keystorePassword);
             if (keystoreAlias) options.push(`--keystore-alias`, keystoreAlias);
             if (bundleFormat) options.push(`--bundle-format`, bundleFormat);
@@ -333,7 +334,7 @@ export class DefoldTerminal implements vscode.Pseudoterminal {
       output().appendLine(`Copying Dependencies...`);
 
       required.forEach((dep) => {
-        execSync(`${jar} -xf "${archive}" "${dep}"`, { cwd: out });
+        execSync(`${jar} -xf ${escape(archive)} ${escape(dep)}`, { cwd: out });
         copyFileSync(join(out, dep), join(out, basename(dep)));
         output().appendLine(`-> ${basename(dep)}`);
       });
