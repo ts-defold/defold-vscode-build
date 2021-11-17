@@ -78,8 +78,16 @@ export class TaskProvider implements vscode.TaskProvider {
    * * This must return the task.definition that is passed in or it will not match
    */
   public resolveTask(task: vscode.Task): vscode.Task | undefined {
-    task.execution = this.createExecution(task.definition as DefoldBuildTaskDefinition);
-    return task;
+    const definition = task.definition as DefoldBuildTaskDefinition;
+    const t = new vscode.Task(
+      definition,
+      vscode.TaskScope.Workspace,
+      definition.action,
+      TaskProvider.Type,
+      this.createExecution(task.definition as DefoldBuildTaskDefinition),
+      definition.action === 'run' ? '$defold-run' : '$defold-build'
+    );
+    return t;
   }
 
   private createExecution(definition: DefoldBuildTaskDefinition): vscode.CustomExecution {
